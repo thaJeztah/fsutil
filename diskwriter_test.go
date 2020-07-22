@@ -14,7 +14,7 @@ import (
 
 	"github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
-	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/assert"
 )
 
 // requiresRoot skips tests that require root
@@ -38,22 +38,22 @@ func TestWriterSimple(t *testing.T) {
 	})
 
 	dest, err := ioutil.TempDir("", "dest")
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(dest)
 
 	dw, err := NewDiskWriter(context.TODO(), dest, DiskWriterOpt{
 		SyncDataCb: noOpWriteTo,
 	})
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	for _, c := range changes {
 		err := dw.HandleChange(c.kind, c.path, c.fi, nil)
-		assert.NoError(t, err)
+		assert.NilError(t, err)
 	}
 
 	b := &bytes.Buffer{}
 	err = Walk(context.Background(), dest, nil, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, string(b.Bytes()), `dir bar
 file bar/foo
@@ -75,22 +75,22 @@ func TestWriterFileToDir(t *testing.T) {
 	dest, err := tmpDir(changeStream([]string{
 		"ADD foo file data1",
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(dest)
 
 	dw, err := NewDiskWriter(context.TODO(), dest, DiskWriterOpt{
 		SyncDataCb: noOpWriteTo,
 	})
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	for _, c := range changes {
 		err := dw.HandleChange(c.kind, c.path, c.fi, nil)
-		assert.NoError(t, err)
+		assert.NilError(t, err)
 	}
 
 	b := &bytes.Buffer{}
 	err = Walk(context.Background(), dest, nil, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, string(b.Bytes()), `dir foo
 file foo/bar
@@ -108,22 +108,22 @@ func TestWriterDirToFile(t *testing.T) {
 		"ADD foo dir",
 		"ADD foo/bar file data2",
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(dest)
 
 	dw, err := NewDiskWriter(context.TODO(), dest, DiskWriterOpt{
 		SyncDataCb: noOpWriteTo,
 	})
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	for _, c := range changes {
 		err := dw.HandleChange(c.kind, c.path, c.fi, nil)
-		assert.NoError(t, err)
+		assert.NilError(t, err)
 	}
 
 	b := &bytes.Buffer{}
 	err = Walk(context.Background(), dest, nil, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, string(b.Bytes()), `file foo
 `)
@@ -137,24 +137,24 @@ func TestWalkerWriterSimple(t *testing.T) {
 		"ADD foo file mydata",
 		"ADD foo2 file",
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(d)
 
 	dest, err := ioutil.TempDir("", "dest")
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(dest)
 
 	dw, err := NewDiskWriter(context.TODO(), dest, DiskWriterOpt{
 		SyncDataCb: newWriteToFunc(d, 0),
 	})
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	err = Walk(context.Background(), d, nil, readAsAdd(dw.HandleChange))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	b := &bytes.Buffer{}
 	err = Walk(context.Background(), dest, nil, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, string(b.Bytes()), `dir bar
 file bar/foo
@@ -164,7 +164,7 @@ file foo2
 `)
 
 	dt, err := ioutil.ReadFile(filepath.Join(dest, "foo"))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	assert.Equal(t, []byte("mydata"), dt)
 
 }
@@ -178,38 +178,38 @@ func TestWalkerWriterAsync(t *testing.T) {
 		"ADD foo/foo4 file >foo/foo3",
 		"ADD foo5 file data5",
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(d)
 
 	dest, err := ioutil.TempDir("", "dest")
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(dest)
 
 	dw, err := NewDiskWriter(context.TODO(), dest, DiskWriterOpt{
 		AsyncDataCb: newWriteToFunc(d, 300*time.Millisecond),
 	})
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	st := time.Now()
 
 	err = Walk(context.Background(), d, nil, readAsAdd(dw.HandleChange))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	err = dw.Wait(context.TODO())
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	dt, err := ioutil.ReadFile(filepath.Join(dest, "foo/foo3"))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	assert.Equal(t, "data3", string(dt))
 
 	dt, err = ioutil.ReadFile(filepath.Join(dest, "foo/foo4"))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	assert.Equal(t, "data3", string(dt))
 
 	fi1, err := os.Lstat(filepath.Join(dest, "foo/foo3"))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	fi2, err := os.Lstat(filepath.Join(dest, "foo/foo4"))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	stat1, ok1 := fi1.Sys().(*syscall.Stat_t)
 	stat2, ok2 := fi2.Sys().(*syscall.Stat_t)
 	if ok1 && ok2 {
@@ -217,11 +217,11 @@ func TestWalkerWriterAsync(t *testing.T) {
 	}
 
 	dt, err = ioutil.ReadFile(filepath.Join(dest, "foo5"))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	assert.Equal(t, "data5", string(dt))
 
 	duration := time.Since(st)
-	assert.True(t, duration < 500*time.Millisecond)
+	assert.Assert(t, duration < 500*time.Millisecond)
 }
 
 func readAsAdd(f HandleChangeFn) filepath.WalkFunc {

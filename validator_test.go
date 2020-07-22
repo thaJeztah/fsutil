@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/tonistiigi/fsutil/types"
+	"gotest.tools/v3/assert"
 )
 
 func TestValidatorSimpleFiles(t *testing.T) {
@@ -15,7 +15,7 @@ func TestValidatorSimpleFiles(t *testing.T) {
 		"ADD foo file",
 		"ADD foo2 file",
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 }
 
 func TestValidatorFilesNotInOrder(t *testing.T) {
@@ -24,7 +24,7 @@ func TestValidatorFilesNotInOrder(t *testing.T) {
 		"ADD foo2 file",
 		"ADD bar file",
 	}))
-	assert.Error(t, err)
+	assert.Assert(t, err != nil)
 }
 
 func TestValidatorFilesNotInOrder2(t *testing.T) {
@@ -33,7 +33,7 @@ func TestValidatorFilesNotInOrder2(t *testing.T) {
 		"ADD foo2 file",
 		"ADD foo2 file",
 	}))
-	assert.Error(t, err)
+	assert.Assert(t, err != nil)
 }
 
 func TestValidatorDirIsFile(t *testing.T) {
@@ -42,7 +42,7 @@ func TestValidatorDirIsFile(t *testing.T) {
 		"ADD foo2 file",
 		"ADD foo2 dir",
 	}))
-	assert.Error(t, err)
+	assert.Assert(t, err != nil)
 }
 
 func TestValidatorDirIsFile2(t *testing.T) {
@@ -51,7 +51,7 @@ func TestValidatorDirIsFile2(t *testing.T) {
 		"ADD foo2 dir",
 		"ADD foo2 file",
 	}))
-	assert.Error(t, err)
+	assert.Assert(t, err != nil)
 }
 
 func TestValidatorNoParentDir(t *testing.T) {
@@ -59,7 +59,7 @@ func TestValidatorNoParentDir(t *testing.T) {
 		"ADD bar file",
 		"ADD foo/baz file",
 	}))
-	assert.Error(t, err)
+	assert.Assert(t, err != nil)
 }
 
 func TestValidatorParentFile(t *testing.T) {
@@ -67,14 +67,14 @@ func TestValidatorParentFile(t *testing.T) {
 		"ADD bar file",
 		"ADD bar/baz file",
 	}))
-	assert.Error(t, err)
+	assert.Assert(t, err != nil)
 }
 
 func TestValidatorParentFile2(t *testing.T) {
 	err := checkValid(changeStream([]string{
 		"ADD foo/bar file",
 	}))
-	assert.Error(t, err)
+	assert.Assert(t, err != nil)
 }
 
 func TestValidatorSimpleDir(t *testing.T) {
@@ -82,7 +82,7 @@ func TestValidatorSimpleDir(t *testing.T) {
 		"ADD foo dir",
 		"ADD foo/bar file",
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 }
 
 func TestValidatorSimpleDir2(t *testing.T) {
@@ -97,7 +97,7 @@ func TestValidatorSimpleDir2(t *testing.T) {
 		"ADD foo/bay/ba file",
 		"ADD foo/baz file",
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 }
 
 func TestValidatorBackToParent(t *testing.T) {
@@ -111,7 +111,7 @@ func TestValidatorBackToParent(t *testing.T) {
 		"ADD foo/bay dir",
 		"ADD foo/baz file",
 	}))
-	assert.Error(t, err)
+	assert.Assert(t, err != nil)
 }
 func TestValidatorParentOrder(t *testing.T) {
 	err := checkValid(changeStream([]string{
@@ -122,7 +122,7 @@ func TestValidatorParentOrder(t *testing.T) {
 		"ADD foo/bay/ab dir",
 		"ADD foo/bar file",
 	}))
-	assert.Error(t, err)
+	assert.Assert(t, err != nil)
 }
 func TestValidatorBigJump(t *testing.T) {
 	err := checkValid(changeStream([]string{
@@ -134,7 +134,7 @@ func TestValidatorBigJump(t *testing.T) {
 		"ADD foo/a/b/c/d/foo dir",
 		"ADD zzz dir",
 	}))
-	assert.Error(t, err)
+	assert.Assert(t, err != nil)
 }
 func TestValidatorDot(t *testing.T) {
 	// dot is before / in naive sort
@@ -143,7 +143,7 @@ func TestValidatorDot(t *testing.T) {
 		"ADD foo/a dir",
 		"ADD foo.2 dir",
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 }
 
 func TestValidatorDot2(t *testing.T) {
@@ -151,14 +151,14 @@ func TestValidatorDot2(t *testing.T) {
 		"ADD foo.a dir",
 		"ADD foo/a/a dir",
 	}))
-	assert.Error(t, err)
+	assert.Assert(t, err != nil)
 
 	err = checkValid(changeStream([]string{
 		"ADD foo dir",
 		"ADD foo. dir",
 		"ADD foo dir",
 	}))
-	assert.Error(t, err)
+	assert.Assert(t, err != nil)
 }
 
 func TestValidatorSkipDir(t *testing.T) {
@@ -166,7 +166,7 @@ func TestValidatorSkipDir(t *testing.T) {
 		"ADD bar dir",
 		"ADD bar/foo/a dir",
 	}))
-	assert.Error(t, err)
+	assert.Assert(t, err != nil)
 }
 
 func checkValid(inp []*change) error {

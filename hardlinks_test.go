@@ -3,7 +3,7 @@ package fsutil
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"gotest.tools/v3/assert"
 )
 
 func TestValidHardlinks(t *testing.T) {
@@ -11,7 +11,7 @@ func TestValidHardlinks(t *testing.T) {
 		"ADD foo file",
 		"ADD foo2 file >foo",
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 }
 
 func TestInvalideHardlinks(t *testing.T) {
@@ -19,7 +19,7 @@ func TestInvalideHardlinks(t *testing.T) {
 		"ADD foo file >foo2",
 		"ADD foo2 file",
 	}))
-	assert.Error(t, err)
+	assert.Assert(t, err != nil)
 }
 
 func TestInvalideHardlinks2(t *testing.T) {
@@ -27,7 +27,7 @@ func TestInvalideHardlinks2(t *testing.T) {
 		"ADD foo file",
 		"ADD foo2 file >bar",
 	}))
-	assert.Error(t, err)
+	assert.Assert(t, err != nil)
 }
 
 func TestHardlinkToDir(t *testing.T) {
@@ -35,7 +35,7 @@ func TestHardlinkToDir(t *testing.T) {
 		"ADD foo dir",
 		"ADD foo2 file >foo",
 	}))
-	assert.Error(t, err)
+	assert.Assert(t, err != nil)
 }
 
 func TestHardlinkToSymlink(t *testing.T) {
@@ -43,7 +43,7 @@ func TestHardlinkToSymlink(t *testing.T) {
 		"ADD foo symlink /",
 		"ADD foo2 file >foo",
 	}))
-	assert.Error(t, err)
+	assert.Assert(t, err != nil)
 }
 
 func checkHardlinks(inp []*change) error {

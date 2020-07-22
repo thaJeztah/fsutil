@@ -10,7 +10,7 @@ import (
 
 	"github.com/containerd/continuity/fs/fstest"
 	"github.com/pkg/errors"
-	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
 )
 
 // TODO: Create copy directory which requires privilege
@@ -29,9 +29,7 @@ func TestCopyDirectory(t *testing.T) {
 		fstest.CreateDir("/home", 0755),
 	)
 
-	if err := testCopy(apply); err != nil {
-		t.Fatalf("Copy test failed: %+v", err)
-	}
+	assert.NilError(t, testCopy(apply))
 }
 
 // This test used to fail because link-no-nothing.txt would be copied first,
@@ -43,112 +41,110 @@ func TestCopyDirectoryWithLocalSymlink(t *testing.T) {
 		fstest.Symlink("nothing.txt", "link-no-nothing.txt"),
 	)
 
-	if err := testCopy(apply); err != nil {
-		t.Fatalf("Copy test failed: %+v", err)
-	}
+	assert.NilError(t, testCopy(apply))
 }
 
 func TestCopyToWorkDir(t *testing.T) {
 	t1, err := ioutil.TempDir("", "test")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(t1)
 
 	apply := fstest.Apply(
 		fstest.CreateFile("foo.txt", []byte("contents"), 0755),
 	)
 
-	require.NoError(t, apply.Apply(t1))
+	assert.NilError(t, apply.Apply(t1))
 
 	t2, err := ioutil.TempDir("", "test")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(t2)
 
 	err = Copy(context.TODO(), t1, "foo.txt", t2, "foo.txt")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	err = fstest.CheckDirectoryEqual(t1, t2)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 }
 
 func TestCopySingleFile(t *testing.T) {
 	t1, err := ioutil.TempDir("", "test")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(t1)
 
 	apply := fstest.Apply(
 		fstest.CreateFile("foo.txt", []byte("contents"), 0755),
 	)
 
-	require.NoError(t, apply.Apply(t1))
+	assert.NilError(t, apply.Apply(t1))
 
 	t2, err := ioutil.TempDir("", "test")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(t2)
 
 	err = Copy(context.TODO(), t1, "foo.txt", t2, "/")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	err = fstest.CheckDirectoryEqual(t1, t2)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	t3, err := ioutil.TempDir("", "test")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(t2)
 
 	err = Copy(context.TODO(), t1, "foo.txt", t3, "foo.txt")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	err = fstest.CheckDirectoryEqual(t1, t2)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	t4, err := ioutil.TempDir("", "test")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(t2)
 
 	err = Copy(context.TODO(), t1, "foo.txt", t4, "foo2.txt")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	_, err = os.Stat(filepath.Join(t4, "foo2.txt"))
-	require.NoError(t, err)
+	assert.NilError(t, err)
 }
 
 func TestCopyOverrideFile(t *testing.T) {
 	t1, err := ioutil.TempDir("", "test")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(t1)
 
 	apply := fstest.Apply(
 		fstest.CreateFile("foo.txt", []byte("contents"), 0755),
 	)
 
-	require.NoError(t, apply.Apply(t1))
+	assert.NilError(t, apply.Apply(t1))
 
 	t2, err := ioutil.TempDir("", "test")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(t2)
 
 	err = Copy(context.TODO(), t1, "foo.txt", t2, "foo.txt")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	err = fstest.CheckDirectoryEqual(t1, t2)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	err = Copy(context.TODO(), t1, "foo.txt", t2, "foo.txt")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	err = fstest.CheckDirectoryEqual(t1, t2)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	err = Copy(context.TODO(), t1, "/.", t2, "/")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	err = fstest.CheckDirectoryEqual(t1, t2)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 }
 
 func TestCopyDirectoryBasename(t *testing.T) {
 	t1, err := ioutil.TempDir("", "test")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(t1)
 
 	apply := fstest.Apply(
@@ -156,30 +152,30 @@ func TestCopyDirectoryBasename(t *testing.T) {
 		fstest.CreateDir("foo/bar", 0755),
 		fstest.CreateFile("foo/bar/baz.txt", []byte("contents"), 0755),
 	)
-	require.NoError(t, apply.Apply(t1))
+	assert.NilError(t, apply.Apply(t1))
 
 	t2, err := ioutil.TempDir("", "test")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(t2)
 
 	err = Copy(context.TODO(), t1, "foo", t2, "foo")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	err = fstest.CheckDirectoryEqual(t1, t2)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	err = Copy(context.TODO(), t1, "foo", t2, "foo", WithCopyInfo(CopyInfo{
 		CopyDirContents: true,
 	}))
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	err = fstest.CheckDirectoryEqual(t1, t2)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 }
 
 func TestCopyWildcards(t *testing.T) {
 	t1, err := ioutil.TempDir("", "test")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(t1)
 
 	apply := fstest.Apply(
@@ -188,35 +184,34 @@ func TestCopyWildcards(t *testing.T) {
 		fstest.CreateFile("bar.txt", []byte("bar-contents"), 0755),
 	)
 
-	require.NoError(t, apply.Apply(t1))
+	assert.NilError(t, apply.Apply(t1))
 
 	t2, err := ioutil.TempDir("", "test")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(t2)
 
 	err = Copy(context.TODO(), t1, "foo*", t2, "/")
-	require.Error(t, err)
+	assert.Assert(t, err != nil)
 
 	err = Copy(context.TODO(), t1, "foo*", t2, "/", AllowWildcards)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	_, err = os.Stat(filepath.Join(t2, "foo.txt"))
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	_, err = os.Stat(filepath.Join(t2, "foo.go"))
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	_, err = os.Stat(filepath.Join(t2, "bar.txt"))
-	require.Error(t, err)
-	require.True(t, os.IsNotExist(err))
+	assert.Assert(t, os.IsNotExist(err))
 
 	t2, err = ioutil.TempDir("", "test")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(t2)
 
 	err = Copy(context.TODO(), t1, "bar*", t2, "foo.txt", AllowWildcards)
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	dt, err := ioutil.ReadFile(filepath.Join(t2, "foo.txt"))
-	require.NoError(t, err)
-	require.Equal(t, "bar-contents", string(dt))
+	assert.NilError(t, err)
+	assert.Equal(t, "bar-contents", string(dt))
 }
 
 func TestCopyExistingDirDest(t *testing.T) {
@@ -225,7 +220,7 @@ func TestCopyExistingDirDest(t *testing.T) {
 	}
 
 	t1, err := ioutil.TempDir("", "test")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(t1)
 
 	apply := fstest.Apply(
@@ -233,10 +228,10 @@ func TestCopyExistingDirDest(t *testing.T) {
 		fstest.CreateFile("dir/foo.txt", []byte("foo-contents"), 0644),
 		fstest.CreateFile("dir/bar.txt", []byte("bar-contents"), 0644),
 	)
-	require.NoError(t, apply.Apply(t1))
+	assert.NilError(t, apply.Apply(t1))
 
 	t2, err := ioutil.TempDir("", "test")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(t2)
 
 	apply = fstest.Apply(
@@ -246,45 +241,45 @@ func TestCopyExistingDirDest(t *testing.T) {
 		// notice how both perms and contents for destination and source are different
 		fstest.CreateFile("dir/bar.txt", []byte("old-bar-contents"), 0600),
 	)
-	require.NoError(t, apply.Apply(t2))
+	assert.NilError(t, apply.Apply(t2))
 
 	for _, x := range []string{"dir", "dir/bar.txt"} {
 		err = os.Chown(filepath.Join(t2, x), 1, 1)
-		require.NoErrorf(t, err, "x=%s", x)
+		assert.NilErrorf(t, err, "x=%s", x)
 	}
 
 	err = Copy(context.TODO(), t1, "dir", t2, "dir", WithCopyInfo(CopyInfo{
 		CopyDirContents: true,
 	}))
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	// verify that existing destination dir's metadata was not overwritten
 	st, err := os.Lstat(filepath.Join(t2, "dir"))
-	require.NoError(t, err)
-	require.Equal(t, st.Mode()&os.ModePerm, os.FileMode(0700))
+	assert.NilError(t, err)
+	assert.Equal(t, st.Mode()&os.ModePerm, os.FileMode(0700))
 	uid, gid := getUidGid(st)
-	require.Equal(t, 1, uid)
-	require.Equal(t, 1, gid)
+	assert.Equal(t, 1, uid)
+	assert.Equal(t, 1, gid)
 
 	// verify that non-existing file was created
 	_, err = os.Lstat(filepath.Join(t2, "dir/foo.txt"))
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	// verify that existing file's content and metadata was overwritten
 	st, err = os.Lstat(filepath.Join(t2, "dir/bar.txt"))
-	require.NoError(t, err)
-	require.Equal(t, os.FileMode(0644), st.Mode()&os.ModePerm)
+	assert.NilError(t, err)
+	assert.Equal(t, os.FileMode(0644), st.Mode()&os.ModePerm)
 	uid, gid = getUidGid(st)
-	require.Equal(t, 0, uid)
-	require.Equal(t, 0, gid)
+	assert.Equal(t, 0, uid)
+	assert.Equal(t, 0, gid)
 	dt, err := ioutil.ReadFile(filepath.Join(t2, "dir/bar.txt"))
-	require.NoError(t, err)
-	require.Equal(t, "bar-contents", string(dt))
+	assert.NilError(t, err)
+	assert.Equal(t, "bar-contents", string(dt))
 }
 
 func TestCopySymlinks(t *testing.T) {
 	t1, err := ioutil.TempDir("", "test")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(t1)
 
 	apply := fstest.Apply(
@@ -293,39 +288,39 @@ func TestCopySymlinks(t *testing.T) {
 		fstest.Symlink("foo.txt", "testdir/link2"),
 		fstest.Symlink("/testdir", "link"),
 	)
-	require.NoError(t, apply.Apply(t1))
+	assert.NilError(t, apply.Apply(t1))
 
 	t2, err := ioutil.TempDir("", "test")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(t2)
 
 	err = Copy(context.TODO(), t1, "link/link2", t2, "foo", WithCopyInfo(CopyInfo{
 		FollowLinks: true,
 	}))
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	// verify that existing destination dir's metadata was not overwritten
 	st, err := os.Lstat(filepath.Join(t2, "foo"))
-	require.NoError(t, err)
-	require.Equal(t, os.FileMode(0644), st.Mode()&os.ModePerm)
-	require.Equal(t, 0, int(st.Mode()&os.ModeSymlink))
+	assert.NilError(t, err)
+	assert.Equal(t, os.FileMode(0644), st.Mode()&os.ModePerm)
+	assert.Equal(t, 0, int(st.Mode()&os.ModeSymlink))
 	dt, err := ioutil.ReadFile(filepath.Join(t2, "foo"))
-	require.Equal(t, "foo-contents", string(dt))
+	assert.Equal(t, "foo-contents", string(dt))
 
 	t3, err := ioutil.TempDir("", "test")
-	require.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(t2)
 
 	err = Copy(context.TODO(), t1, "link/link2", t3, "foo", WithCopyInfo(CopyInfo{}))
-	require.NoError(t, err)
+	assert.NilError(t, err)
 
 	// verify that existing destination dir's metadata was not overwritten
 	st, err = os.Lstat(filepath.Join(t3, "foo"))
-	require.NoError(t, err)
-	require.Equal(t, os.ModeSymlink, st.Mode()&os.ModeSymlink)
+	assert.NilError(t, err)
+	assert.Equal(t, os.ModeSymlink, st.Mode()&os.ModeSymlink)
 	link, err := os.Readlink(filepath.Join(t3, "foo"))
-	require.NoError(t, err)
-	require.Equal(t, "foo.txt", link)
+	assert.NilError(t, err)
+	assert.Equal(t, "foo.txt", link)
 }
 
 func testCopy(apply fstest.Applier) error {

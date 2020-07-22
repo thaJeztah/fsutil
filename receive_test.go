@@ -15,21 +15,20 @@ import (
 
 	"github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/tonistiigi/fsutil/types"
 	"golang.org/x/sync/errgroup"
+	"gotest.tools/v3/assert"
 )
 
 func TestInvalidExcludePatterns(t *testing.T) {
 	d, err := tmpDir(changeStream([]string{
 		"ADD foo file data1",
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(d)
 
 	dest, err := ioutil.TempDir("", "dest")
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(dest)
 
 	ts := newNotificationBuffer()
@@ -41,7 +40,7 @@ func TestInvalidExcludePatterns(t *testing.T) {
 	eg.Go(func() error {
 		defer s1.(*fakeConnProto).closeSend()
 		err := Send(ctx, s1, NewFS(d, &WalkOpt{ExcludePatterns: []string{"!"}}), nil)
-		assert.Contains(t, err.Error(), "invalid excludepatterns")
+		assert.ErrorContains(t, err, "invalid excludepatterns")
 		return err
 	})
 	eg.Go(func() error {
@@ -49,8 +48,8 @@ func TestInvalidExcludePatterns(t *testing.T) {
 			NotifyHashed:  chs.HandleChange,
 			ContentHasher: simpleSHA256Hasher,
 		})
-		assert.Contains(t, err.Error(), "error from sender:")
-		assert.Contains(t, err.Error(), "invalid excludepatterns")
+		assert.ErrorContains(t, err, "error from sender:")
+		assert.ErrorContains(t, err, "invalid excludepatterns")
 		return err
 	})
 
@@ -62,7 +61,7 @@ func TestInvalidExcludePatterns(t *testing.T) {
 	case <-time.After(15 * time.Second):
 		t.Fatal("timeout")
 	case err = <-errCh:
-		assert.Contains(t, err.Error(), "invalid excludepatterns")
+		assert.ErrorContains(t, err, "invalid excludepatterns")
 	}
 }
 
@@ -73,11 +72,11 @@ func TestCopyWithSubDir(t *testing.T) {
 		"ADD foo dir",
 		"ADD foo/bar file data1",
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(d)
 
 	dest, err := ioutil.TempDir("", "dest")
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(dest)
 
 	eg, ctx := errgroup.WithContext(context.Background())
@@ -96,10 +95,10 @@ func TestCopyWithSubDir(t *testing.T) {
 	})
 
 	err = eg.Wait()
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	dt, err := ioutil.ReadFile(filepath.Join(dest, "sub/foo/bar"))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	assert.Equal(t, "data1", string(dt))
 }
 
@@ -107,17 +106,17 @@ func TestCopySwitchDirToFile(t *testing.T) {
 	d, err := tmpDir(changeStream([]string{
 		"ADD foo file data1",
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(d)
 
 	dest, err := tmpDir(changeStream([]string{
 		"ADD foo dir",
 		"ADD foo/bar dile data2",
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(d)
 
-	copy := func(src, dest string) (*changes, error) {
+	copyFn := func(src, dest string) (*changes, error) {
 		ts := newNotificationBuffer()
 		chs := &changes{fn: ts.HandleChange}
 
@@ -153,17 +152,17 @@ func TestCopySwitchDirToFile(t *testing.T) {
 		return chs, nil
 	}
 
-	chs, err := copy(d, dest)
-	require.NoError(t, err)
+	chs, err := copyFn(d, dest)
+	assert.NilError(t, err)
 
 	k, ok := chs.c["foo"]
-	require.True(t, ok)
-	require.Equal(t, k, ChangeKindAdd)
-	require.Equal(t, len(chs.c), 1)
+	assert.Assert(t, ok)
+	assert.Equal(t, k, ChangeKindAdd)
+	assert.Equal(t, len(chs.c), 1)
 
 	b := &bytes.Buffer{}
 	err = Walk(context.Background(), dest, nil, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, string(b.Bytes()), `file foo
 `)
@@ -180,11 +179,11 @@ func TestCopySimple(t *testing.T) {
 		"ADD zzz/bb/cc/dd symlink ../../",
 		"ADD zzz.aa zzdata",
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(d)
 
 	dest, err := ioutil.TempDir("", "dest")
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(dest)
 
 	ts := newNotificationBuffer()
@@ -218,11 +217,11 @@ func TestCopySimple(t *testing.T) {
 		})
 	})
 
-	assert.NoError(t, eg.Wait())
+	assert.NilError(t, eg.Wait())
 
 	b := &bytes.Buffer{}
 	err = Walk(context.Background(), dest, nil, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, string(b.Bytes()), `file foo
 file foo2
@@ -235,27 +234,27 @@ file zzz.aa
 `)
 
 	dt, err := ioutil.ReadFile(filepath.Join(dest, "zzz/aa"))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	assert.Equal(t, "data3", string(dt))
 
 	dt, err = ioutil.ReadFile(filepath.Join(dest, "foo2"))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	assert.Equal(t, "dat2", string(dt))
 
 	fi, err := os.Stat(filepath.Join(dest, "foo2"))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	assert.Equal(t, tm, fi.ModTime())
 
 	h, ok := ts.Hash("zzz/aa")
-	assert.True(t, ok)
+	assert.Assert(t, ok)
 	assert.Equal(t, digest.Digest("sha256:99b6ef96ee0572b5b3a4eb28f00b715d820bfd73836e59cc1565e241f4d1bb2f"), h)
 
 	h, ok = ts.Hash("foo2")
-	assert.True(t, ok)
+	assert.Assert(t, ok)
 	assert.Equal(t, digest.Digest("sha256:dd2529f7749ba45ea55de3b2e10086d6494cc45a94e57650c2882a6a14b4ff32"), h)
 
 	h, ok = ts.Hash("zzz/bb/cc/dd")
-	assert.True(t, ok)
+	assert.Assert(t, ok)
 	assert.Equal(t, digest.Digest("sha256:eca07e8f2d09bd574ea2496312e6de1685ef15b8e6a49a534ed9e722bcac8adc"), h)
 
 	k, ok := chs.c["zzz/aa"]
@@ -263,10 +262,10 @@ file zzz.aa
 	assert.Equal(t, k, ChangeKindAdd)
 
 	err = ioutil.WriteFile(filepath.Join(d, "zzz/bb/cc/foo"), []byte("data5"), 0600)
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	err = os.RemoveAll(filepath.Join(d, "foo2"))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	chs = &changes{fn: ts.HandleChange}
 
@@ -296,11 +295,11 @@ file zzz.aa
 		})
 	})
 
-	assert.NoError(t, eg.Wait())
+	assert.NilError(t, eg.Wait())
 
 	b = &bytes.Buffer{}
 	err = Walk(context.Background(), dest, nil, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, string(b.Bytes()), `file foo
 dir zzz
@@ -313,19 +312,19 @@ file zzz.aa
 `)
 
 	dt, err = ioutil.ReadFile(filepath.Join(dest, "zzz/bb/cc/foo"))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	assert.Equal(t, "data5", string(dt))
 
 	h, ok = ts.Hash("zzz/bb/cc/dd")
-	assert.True(t, ok)
+	assert.Assert(t, ok)
 	assert.Equal(t, digest.Digest("sha256:eca07e8f2d09bd574ea2496312e6de1685ef15b8e6a49a534ed9e722bcac8adc"), h)
 
 	h, ok = ts.Hash("zzz/bb/cc/foo")
-	assert.True(t, ok)
+	assert.Assert(t, ok)
 	assert.Equal(t, digest.Digest("sha256:cd14a931fc2e123ded338093f2864b173eecdee578bba6ec24d0724272326c3a"), h)
 
 	_, ok = ts.Hash("foo2")
-	assert.False(t, ok)
+	assert.Assert(t, ok)
 
 	k, ok = chs.c["foo2"]
 	assert.Equal(t, ok, true)

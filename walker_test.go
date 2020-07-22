@@ -12,8 +12,8 @@ import (
 	"testing"
 
 	"github.com/pkg/errors"
-	"github.com/stretchr/testify/assert"
 	"github.com/tonistiigi/fsutil/types"
+	"gotest.tools/v3/assert"
 )
 
 func TestWalkerSimple(t *testing.T) {
@@ -21,11 +21,11 @@ func TestWalkerSimple(t *testing.T) {
 		"ADD foo file",
 		"ADD foo2 file",
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(d)
 	b := &bytes.Buffer{}
 	err = Walk(context.Background(), d, nil, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, string(b.Bytes()), `file foo
 file foo2
@@ -39,13 +39,13 @@ func TestWalkerInclude(t *testing.T) {
 		"ADD bar/foo file",
 		"ADD foo2 file",
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(d)
 	b := &bytes.Buffer{}
 	err = Walk(context.Background(), d, &WalkOpt{
 		IncludePatterns: []string{"bar"},
 	}, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, `dir bar
 file bar/foo
@@ -55,7 +55,7 @@ file bar/foo
 	err = Walk(context.Background(), d, &WalkOpt{
 		IncludePatterns: []string{"bar/foo"},
 	}, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, `dir bar
 file bar/foo
@@ -65,7 +65,7 @@ file bar/foo
 	err = Walk(context.Background(), d, &WalkOpt{
 		IncludePatterns: []string{"b*"},
 	}, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, `dir bar
 file bar/foo
@@ -75,7 +75,7 @@ file bar/foo
 	err = Walk(context.Background(), d, &WalkOpt{
 		IncludePatterns: []string{"bar/f*"},
 	}, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, `dir bar
 file bar/foo
@@ -85,7 +85,7 @@ file bar/foo
 	err = Walk(context.Background(), d, &WalkOpt{
 		IncludePatterns: []string{"bar/g*"},
 	}, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, `dir bar
 `, string(b.Bytes()))
@@ -94,7 +94,7 @@ file bar/foo
 	err = Walk(context.Background(), d, &WalkOpt{
 		IncludePatterns: []string{"f*"},
 	}, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, `file foo2
 `, string(b.Bytes()))
@@ -103,7 +103,7 @@ file bar/foo
 	err = Walk(context.Background(), d, &WalkOpt{
 		IncludePatterns: []string{"b*/f*"},
 	}, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, `dir bar
 file bar/foo
@@ -113,7 +113,7 @@ file bar/foo
 	err = Walk(context.Background(), d, &WalkOpt{
 		IncludePatterns: []string{"b*/foo"},
 	}, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, `dir bar
 file bar/foo
@@ -123,7 +123,7 @@ file bar/foo
 	err = Walk(context.Background(), d, &WalkOpt{
 		IncludePatterns: []string{"b*/"},
 	}, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, `dir bar
 file bar/foo
@@ -137,13 +137,13 @@ func TestWalkerExclude(t *testing.T) {
 		"ADD foo2 file",
 		"ADD foo/bar2 file",
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(d)
 	b := &bytes.Buffer{}
 	err = Walk(context.Background(), d, &WalkOpt{
 		ExcludePatterns: []string{"foo*", "!foo/bar2"},
 	}, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, `file bar
 dir foo
@@ -164,13 +164,13 @@ func TestWalkerFollowLinks(t *testing.T) {
 		"ADD bax file",
 		"ADD bay file", // not included
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(d)
 	b := &bytes.Buffer{}
 	err = Walk(context.Background(), d, &WalkOpt{
 		FollowPaths: []string{"foo/l*", "bar"},
 	}, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, `file bar
 file bax
@@ -191,13 +191,13 @@ func TestWalkerFollowLinksToRoot(t *testing.T) {
 		"ADD bay dir",
 		"ADD bay/baz file",
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(d)
 	b := &bytes.Buffer{}
 	err = Walk(context.Background(), d, &WalkOpt{
 		FollowPaths: []string{"foo"},
 	}, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, `file bar
 file bax
@@ -214,7 +214,7 @@ func TestWalkerMap(t *testing.T) {
 		"ADD foo2 file",
 		"ADD foo/bar2 file",
 	}))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 	defer os.RemoveAll(d)
 	b := &bytes.Buffer{}
 	err = Walk(context.Background(), d, &WalkOpt{
@@ -226,7 +226,7 @@ func TestWalkerMap(t *testing.T) {
 			return false
 		},
 	}, bufWalk(b))
-	assert.NoError(t, err)
+	assert.NilError(t, err)
 
 	assert.Equal(t, `dir _foo
 file _foo/bar2
